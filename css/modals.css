@@ -1,0 +1,9 @@
+/* Modals extended styles — see panels.css for main modal styles */
+
+/* Gradient text utility */
+.grad-text {
+  background: linear-gradient(135deg, var(--accent), var(--accent2));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}

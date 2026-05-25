@@ -1,0 +1,526 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Webcraft — Visual Website Builder</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,300&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="css/theme.css" />
+  <link rel="stylesheet" href="css/layout.css" />
+  <link rel="stylesheet" href="css/blocks.css" />
+  <link rel="stylesheet" href="css/canvas.css" />
+  <link rel="stylesheet" href="css/panels.css" />
+  <link rel="stylesheet" href="css/modals.css" />
+  <link rel="stylesheet" href="css/animations.css" />
+</head>
+<body>
+
+<!-- ══════════════════════════════════════════
+     SPLASH / WELCOME SCREEN
+══════════════════════════════════════════ -->
+<div id="splash-screen">
+  <div class="splash-bg"></div>
+  <div class="splash-content">
+    <div class="splash-logo">
+      <svg width="52" height="52" viewBox="0 0 52 52" fill="none">
+        <rect width="52" height="52" rx="14" fill="url(#splashGrad)"/>
+        <path d="M14 26L22 18L30 26L22 34L14 26Z" fill="white" opacity="0.9"/>
+        <path d="M24 26L32 18L40 26L32 34L24 26Z" fill="white" opacity="0.5"/>
+        <defs>
+          <linearGradient id="splashGrad" x1="0" y1="0" x2="52" y2="52">
+            <stop offset="0%" stop-color="#6C63FF"/>
+            <stop offset="100%" stop-color="#3ECFCF"/>
+          </linearGradient>
+        </defs>
+      </svg>
+      <span>Webcraft</span>
+    </div>
+    <h1 class="splash-title">Build Websites.<br/>Without Code.</h1>
+    <p class="splash-sub">Drag blocks. Connect nodes. Export real HTML.</p>
+    <div class="splash-actions">
+      <button class="btn-primary splash-new" onclick="App.startNew()">
+        <span>✦</span> Start Building
+      </button>
+      <button class="btn-ghost splash-import" onclick="App.showImportModal()">
+        <span>↑</span> Import HTML
+      </button>
+    </div>
+    <div class="splash-recent" id="splash-recent"></div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     MAIN APP SHELL
+══════════════════════════════════════════ -->
+<div id="app" class="hidden">
+
+  <!-- TOP BAR -->
+  <header class="topbar">
+    <div class="topbar-left">
+      <div class="app-logo" onclick="App.goHome()">
+        <svg width="28" height="28" viewBox="0 0 52 52" fill="none">
+          <rect width="52" height="52" rx="10" fill="url(#logoGrad)"/>
+          <path d="M14 26L22 18L30 26L22 34L14 26Z" fill="white" opacity="0.9"/>
+          <path d="M24 26L32 18L40 26L32 34L24 26Z" fill="white" opacity="0.5"/>
+          <defs>
+            <linearGradient id="logoGrad" x1="0" y1="0" x2="52" y2="52">
+              <stop offset="0%" stop-color="#6C63FF"/>
+              <stop offset="100%" stop-color="#3ECFCF"/>
+            </linearGradient>
+          </defs>
+        </svg>
+        <span class="logo-text">Webcraft</span>
+      </div>
+      <div class="project-name-wrap">
+        <input type="text" id="project-name" value="Untitled Project" class="project-name-input" />
+      </div>
+    </div>
+
+    <div class="topbar-center">
+      <div class="tool-group">
+        <button class="tool-btn active" id="tool-select" title="Select (V)" onclick="Canvas.setTool('select')">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M4 0l16 12-7 2-4 8L4 0z"/></svg>
+        </button>
+        <button class="tool-btn" id="tool-pan" title="Pan (H)" onclick="Canvas.setTool('pan')">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 11V6a2 2 0 0 0-4 0v5M14 10V4a2 2 0 0 0-4 0v6M10 10.5V6a2 2 0 0 0-4 0v9.5l-1.5-2a2 2 0 0 0-3 2.66L6 22h12l1-11h-5z"/></svg>
+        </button>
+        <button class="tool-btn" id="tool-connect" title="Connect Nodes (C)" onclick="Canvas.setTool('connect')">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="6" cy="6" r="3"/><circle cx="18" cy="18" r="3"/><line x1="9" y1="6" x2="15" y2="18"/></svg>
+        </button>
+        <button class="tool-btn" id="tool-text" title="Text Block (T)" onclick="Blocks.addBlock('text')">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M4 6h16v2H4zm0 5h16v2H4zm0 5h8v2H4z"/></svg>
+        </button>
+      </div>
+
+      <div class="sep"></div>
+
+      <div class="zoom-control">
+        <button onclick="Canvas.zoomOut()">−</button>
+        <span id="zoom-label">100%</span>
+        <button onclick="Canvas.zoomIn()">+</button>
+        <button class="fit-btn" onclick="Canvas.fitView()" title="Fit to screen">⊡</button>
+      </div>
+    </div>
+
+    <div class="topbar-right">
+      <!-- Preview Toggle -->
+      <div class="preview-toggle-group">
+        <button class="pvw-btn active" id="pvw-desktop" title="Desktop Preview" onclick="Preview.setMode('desktop')">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+        </button>
+        <button class="pvw-btn" id="pvw-mobile" title="Mobile Preview" onclick="Preview.setMode('mobile')">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="5" y="2" width="14" height="20" rx="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg>
+        </button>
+      </div>
+
+      <div class="sep"></div>
+
+      <button class="btn-ghost sm" onclick="App.showImportModal()">↑ Import</button>
+      <button class="btn-ghost sm" onclick="App.exportHTML()">↓ Export</button>
+      <button class="btn-primary sm" onclick="Preview.openPreview()">▶ Preview</button>
+
+      <div class="sep"></div>
+
+      <!-- Theme Toggle -->
+      <button class="theme-toggle" id="theme-toggle" onclick="Theme.toggle()" title="Toggle theme">
+        <span class="theme-icon sun">☀</span>
+        <span class="theme-icon moon">☽</span>
+        <div class="theme-thumb"></div>
+      </button>
+
+      <!-- Undo/Redo -->
+      <button class="icon-btn" onclick="History.undo()" title="Undo (Ctrl+Z)">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 14 4 9 9 4"/><path d="M20 20v-7a4 4 0 0 0-4-4H4"/></svg>
+      </button>
+      <button class="icon-btn" onclick="History.redo()" title="Redo (Ctrl+Shift+Z)">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 14 20 9 15 4"/><path d="M4 20v-7a4 4 0 0 0 4-4h12"/></svg>
+      </button>
+    </div>
+  </header>
+
+  <!-- MAIN WORKSPACE -->
+  <div class="workspace">
+
+    <!-- LEFT PANEL: Block Library -->
+    <aside class="panel panel-left" id="panel-left">
+      <div class="panel-header">
+        <span>Blocks</span>
+        <div class="panel-tabs">
+          <button class="ptab active" data-tab="elements" onclick="LeftPanel.switchTab('elements')">Elements</button>
+          <button class="ptab" data-tab="layout" onclick="LeftPanel.switchTab('layout')">Layout</button>
+          <button class="ptab" data-tab="pages" onclick="LeftPanel.switchTab('pages')">Pages</button>
+        </div>
+      </div>
+      <div class="panel-search">
+        <input type="text" placeholder="Search blocks…" id="block-search" oninput="LeftPanel.search(this.value)" />
+      </div>
+
+      <!-- Elements Tab -->
+      <div class="tab-content active" id="tab-elements">
+        <div class="block-section">
+          <div class="block-section-label">Text</div>
+          <div class="block-grid">
+            <div class="block-item" draggable="true" data-type="heading" ondragstart="Blocks.dragStart(event)">
+              <div class="bi-icon">H</div><span>Heading</span>
+            </div>
+            <div class="block-item" draggable="true" data-type="text" ondragstart="Blocks.dragStart(event)">
+              <div class="bi-icon">T</div><span>Text</span>
+            </div>
+            <div class="block-item" draggable="true" data-type="link" ondragstart="Blocks.dragStart(event)">
+              <div class="bi-icon">🔗</div><span>Link</span>
+            </div>
+            <div class="block-item" draggable="true" data-type="label" ondragstart="Blocks.dragStart(event)">
+              <div class="bi-icon">Lb</div><span>Label</span>
+            </div>
+          </div>
+        </div>
+        <div class="block-section">
+          <div class="block-section-label">Media</div>
+          <div class="block-grid">
+            <div class="block-item" draggable="true" data-type="image" ondragstart="Blocks.dragStart(event)">
+              <div class="bi-icon">🖼</div><span>Image</span>
+            </div>
+            <div class="block-item" draggable="true" data-type="video" ondragstart="Blocks.dragStart(event)">
+              <div class="bi-icon">▶</div><span>Video</span>
+            </div>
+            <div class="block-item" draggable="true" data-type="icon" ondragstart="Blocks.dragStart(event)">
+              <div class="bi-icon">★</div><span>Icon</span>
+            </div>
+            <div class="block-item" draggable="true" data-type="divider" ondragstart="Blocks.dragStart(event)">
+              <div class="bi-icon">—</div><span>Divider</span>
+            </div>
+          </div>
+        </div>
+        <div class="block-section">
+          <div class="block-section-label">UI Elements</div>
+          <div class="block-grid">
+            <div class="block-item" draggable="true" data-type="button" ondragstart="Blocks.dragStart(event)">
+              <div class="bi-icon">⬛</div><span>Button</span>
+            </div>
+            <div class="block-item" draggable="true" data-type="input" ondragstart="Blocks.dragStart(event)">
+              <div class="bi-icon">▭</div><span>Input</span>
+            </div>
+            <div class="block-item" draggable="true" data-type="textarea" ondragstart="Blocks.dragStart(event)">
+              <div class="bi-icon">☰</div><span>Textarea</span>
+            </div>
+            <div class="block-item" draggable="true" data-type="checkbox" ondragstart="Blocks.dragStart(event)">
+              <div class="bi-icon">☑</div><span>Checkbox</span>
+            </div>
+            <div class="block-item" draggable="true" data-type="toggle" ondragstart="Blocks.dragStart(event)">
+              <div class="bi-icon">⊙</div><span>Toggle</span>
+            </div>
+            <div class="block-item" draggable="true" data-type="dropdown" ondragstart="Blocks.dragStart(event)">
+              <div class="bi-icon">▾</div><span>Dropdown</span>
+            </div>
+            <div class="block-item" draggable="true" data-type="progress" ondragstart="Blocks.dragStart(event)">
+              <div class="bi-icon">▬</div><span>Progress</span>
+            </div>
+            <div class="block-item" draggable="true" data-type="badge" ondragstart="Blocks.dragStart(event)">
+              <div class="bi-icon">●</div><span>Badge</span>
+            </div>
+            <div class="block-item" draggable="true" data-type="avatar" ondragstart="Blocks.dragStart(event)">
+              <div class="bi-icon">👤</div><span>Avatar</span>
+            </div>
+            <div class="block-item" draggable="true" data-type="card" ondragstart="Blocks.dragStart(event)">
+              <div class="bi-icon">▣</div><span>Card</span>
+            </div>
+          </div>
+        </div>
+        <div class="block-section">
+          <div class="block-section-label">Navigation</div>
+          <div class="block-grid">
+            <div class="block-item" draggable="true" data-type="navbar" ondragstart="Blocks.dragStart(event)">
+              <div class="bi-icon">≡</div><span>Navbar</span>
+            </div>
+            <div class="block-item" draggable="true" data-type="breadcrumb" ondragstart="Blocks.dragStart(event)">
+              <div class="bi-icon">›</div><span>Breadcrumb</span>
+            </div>
+            <div class="block-item" draggable="true" data-type="tabs" ondragstart="Blocks.dragStart(event)">
+              <div class="bi-icon">⊟</div><span>Tabs</span>
+            </div>
+            <div class="block-item" draggable="true" data-type="pagination" ondragstart="Blocks.dragStart(event)">
+              <div class="bi-icon">‥</div><span>Pagination</span>
+            </div>
+          </div>
+        </div>
+        <div class="block-section">
+          <div class="block-section-label">Sections</div>
+          <div class="block-grid">
+            <div class="block-item wide" draggable="true" data-type="hero" ondragstart="Blocks.dragStart(event)">
+              <div class="bi-icon">◈</div><span>Hero Section</span>
+            </div>
+            <div class="block-item wide" draggable="true" data-type="features" ondragstart="Blocks.dragStart(event)">
+              <div class="bi-icon">⊞</div><span>Features Grid</span>
+            </div>
+            <div class="block-item wide" draggable="true" data-type="footer" ondragstart="Blocks.dragStart(event)">
+              <div class="bi-icon">⊟</div><span>Footer</span>
+            </div>
+            <div class="block-item wide" draggable="true" data-type="cta" ondragstart="Blocks.dragStart(event)">
+              <div class="bi-icon">◉</div><span>CTA Section</span>
+            </div>
+            <div class="block-item wide" draggable="true" data-type="testimonial" ondragstart="Blocks.dragStart(event)">
+              <div class="bi-icon">❝</div><span>Testimonial</span>
+            </div>
+            <div class="block-item wide" draggable="true" data-type="pricing" ondragstart="Blocks.dragStart(event)">
+              <div class="bi-icon">$</div><span>Pricing Card</span>
+            </div>
+          </div>
+        </div>
+        <div class="block-section">
+          <div class="block-section-label">Shapes</div>
+          <div class="block-grid">
+            <div class="block-item" draggable="true" data-type="rect" ondragstart="Blocks.dragStart(event)">
+              <div class="bi-icon">▬</div><span>Rectangle</span>
+            </div>
+            <div class="block-item" draggable="true" data-type="circle" ondragstart="Blocks.dragStart(event)">
+              <div class="bi-icon">●</div><span>Circle</span>
+            </div>
+            <div class="block-item" draggable="true" data-type="spacer" ondragstart="Blocks.dragStart(event)">
+              <div class="bi-icon">↕</div><span>Spacer</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Layout Tab -->
+      <div class="tab-content" id="tab-layout">
+        <div class="block-section">
+          <div class="block-section-label">Containers</div>
+          <div class="block-grid">
+            <div class="block-item wide" draggable="true" data-type="container" ondragstart="Blocks.dragStart(event)">
+              <div class="bi-icon">□</div><span>Container</span>
+            </div>
+            <div class="block-item wide" draggable="true" data-type="row" ondragstart="Blocks.dragStart(event)">
+              <div class="bi-icon">⊟</div><span>Row</span>
+            </div>
+            <div class="block-item wide" draggable="true" data-type="column" ondragstart="Blocks.dragStart(event)">
+              <div class="bi-icon">⊞</div><span>Column</span>
+            </div>
+            <div class="block-item wide" draggable="true" data-type="grid" ondragstart="Blocks.dragStart(event)">
+              <div class="bi-icon">⊞</div><span>Grid</span>
+            </div>
+            <div class="block-item wide" draggable="true" data-type="section" ondragstart="Blocks.dragStart(event)">
+              <div class="bi-icon">▣</div><span>Section</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Pages Tab -->
+      <div class="tab-content" id="tab-pages">
+        <div class="pages-manager" id="pages-manager">
+          <!-- Populated by JS -->
+        </div>
+        <button class="btn-ghost full-w mt8" onclick="Pages.addPage()">+ Add Page</button>
+      </div>
+    </aside>
+
+    <!-- CANVAS AREA -->
+    <main class="canvas-wrap" id="canvas-wrap">
+      <div class="canvas-ruler-x" id="ruler-x"></div>
+      <div class="canvas-ruler-y" id="ruler-y"></div>
+
+      <div class="canvas-viewport" id="canvas-viewport"
+           ondragover="event.preventDefault()"
+           ondrop="Blocks.dropBlock(event)"
+           onmousedown="Canvas.onMouseDown(event)"
+           onmousemove="Canvas.onMouseMove(event)"
+           onmouseup="Canvas.onMouseUp(event)"
+           onwheel="Canvas.onWheel(event)">
+
+        <!-- Infinite canvas grid background -->
+        <svg class="canvas-grid" id="canvas-grid" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <pattern id="smallGrid" width="20" height="20" patternUnits="userSpaceOnUse">
+              <path d="M 20 0 L 0 0 0 20" fill="none" stroke="var(--grid-line)" stroke-width="0.5"/>
+            </pattern>
+            <pattern id="grid" width="100" height="100" patternUnits="userSpaceOnUse">
+              <rect width="100" height="100" fill="url(#smallGrid)"/>
+              <path d="M 100 0 L 0 0 0 100" fill="none" stroke="var(--grid-line-major)" stroke-width="1"/>
+            </pattern>
+          </defs>
+          <rect width="100%" height="100%" fill="url(#grid)"/>
+        </svg>
+
+        <!-- Node connection SVG layer -->
+        <svg class="connections-layer" id="connections-layer" xmlns="http://www.w3.org/2000/svg"></svg>
+
+        <!-- Blocks live here -->
+        <div class="canvas-stage" id="canvas-stage"></div>
+
+        <!-- Selection rectangle -->
+        <div class="selection-rect" id="selection-rect"></div>
+      </div>
+
+      <!-- Canvas mini-map -->
+      <div class="minimap" id="minimap">
+        <canvas id="minimap-canvas" width="180" height="120"></canvas>
+        <div class="minimap-viewport" id="minimap-viewport"></div>
+      </div>
+
+      <!-- Canvas quick controls -->
+      <div class="canvas-quick">
+        <button onclick="Canvas.fitView()" title="Fit">⊡</button>
+        <button onclick="Canvas.zoomReset()" title="100%">1:1</button>
+        <button onclick="Canvas.zoomIn()">+</button>
+        <button onclick="Canvas.zoomOut()">−</button>
+      </div>
+    </main>
+
+    <!-- RIGHT PANEL: Properties -->
+    <aside class="panel panel-right" id="panel-right">
+      <div class="panel-header">
+        <span>Properties</span>
+        <div class="panel-tabs">
+          <button class="ptab active" data-tab="style" onclick="RightPanel.switchTab('style')">Style</button>
+          <button class="ptab" data-tab="content" onclick="RightPanel.switchTab('content')">Content</button>
+          <button class="ptab" data-tab="nodes" onclick="RightPanel.switchTab('nodes')">Nodes</button>
+        </div>
+      </div>
+
+      <div class="prop-body" id="prop-body">
+        <div class="no-selection">
+          <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" stroke-width="1.5"><path d="M4 0l16 12-7 2-4 8L4 0z"/></svg>
+          <p>Select a block to edit its properties</p>
+        </div>
+      </div>
+    </aside>
+
+  </div>
+
+  <!-- BOTTOM STATUS BAR -->
+  <footer class="statusbar">
+    <div class="status-left">
+      <span id="status-blocks">0 blocks</span>
+      <span class="status-sep">·</span>
+      <span id="status-page">Page 1</span>
+      <span class="status-sep">·</span>
+      <span id="status-tool">Select</span>
+    </div>
+    <div class="status-center">
+      <span id="status-pos">X: 0  Y: 0</span>
+    </div>
+    <div class="status-right">
+      <span id="status-saved" class="saved-indicator">All changes saved</span>
+    </div>
+  </footer>
+</div>
+
+<!-- ══════════════════════════════════════════
+     MODALS
+══════════════════════════════════════════ -->
+
+<!-- Import Modal -->
+<div class="modal-overlay hidden" id="modal-import">
+  <div class="modal">
+    <div class="modal-header">
+      <h2>Import HTML</h2>
+      <button class="modal-close" onclick="App.closeModal('modal-import')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="import-zone" id="import-zone"
+           ondragover="event.preventDefault(); this.classList.add('drag-over')"
+           ondragleave="this.classList.remove('drag-over')"
+           ondrop="Importer.handleDrop(event)">
+        <div class="import-icon">↑</div>
+        <p>Drop your <strong>index.html</strong> file here</p>
+        <span>or</span>
+        <label class="btn-ghost" for="import-file-input">Choose File</label>
+        <input type="file" id="import-file-input" accept=".html,.htm" style="display:none" onchange="Importer.handleFile(event)" />
+      </div>
+      <div class="import-divider"><span>or paste code</span></div>
+      <textarea id="import-code" class="code-input" placeholder="Paste HTML code here…" rows="8"></textarea>
+      <div class="modal-actions">
+        <button class="btn-ghost" onclick="App.closeModal('modal-import')">Cancel</button>
+        <button class="btn-primary" onclick="Importer.importFromCode()">Import & Parse</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Export Modal -->
+<div class="modal-overlay hidden" id="modal-export">
+  <div class="modal modal-lg">
+    <div class="modal-header">
+      <h2>Export</h2>
+      <button class="modal-close" onclick="App.closeModal('modal-export')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="export-tabs">
+        <button class="etab active" onclick="Exporter.setFormat('html')">HTML + CSS</button>
+        <button class="etab" onclick="Exporter.setFormat('react')">React JSX</button>
+        <button class="etab" onclick="Exporter.setFormat('tailwind')">Tailwind</button>
+      </div>
+      <div class="code-preview-wrap">
+        <pre id="export-preview" class="code-preview"></pre>
+      </div>
+      <div class="modal-actions">
+        <button class="btn-ghost" onclick="Exporter.copyCode()">Copy Code</button>
+        <button class="btn-primary" onclick="Exporter.download()">↓ Download Files</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Preview Modal -->
+<div class="modal-overlay hidden" id="modal-preview">
+  <div class="modal modal-preview">
+    <div class="modal-header preview-header">
+      <div class="preview-device-bar">
+        <button class="pvw-tab active" onclick="Preview.setDevice('desktop')">🖥 Desktop</button>
+        <button class="pvw-tab" onclick="Preview.setDevice('tablet')">📱 Tablet</button>
+        <button class="pvw-tab" onclick="Preview.setDevice('mobile')">📱 Mobile</button>
+      </div>
+      <div class="preview-url-bar">
+        <span>preview://</span>
+        <span id="preview-project-name">untitled</span>
+      </div>
+      <button class="modal-close" onclick="App.closeModal('modal-preview')">✕</button>
+    </div>
+    <div class="preview-body" id="preview-body">
+      <div class="preview-frame-wrap" id="preview-frame-wrap">
+        <iframe id="preview-frame" class="preview-iframe" sandbox="allow-scripts allow-same-origin"></iframe>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Context Menu -->
+<div class="context-menu hidden" id="context-menu">
+  <button onclick="ContextMenu.action('duplicate')">⧉ Duplicate</button>
+  <button onclick="ContextMenu.action('copy')">⎘ Copy</button>
+  <button onclick="ContextMenu.action('paste')">⎗ Paste</button>
+  <div class="ctx-sep"></div>
+  <button onclick="ContextMenu.action('bringForward')">↑ Bring Forward</button>
+  <button onclick="ContextMenu.action('sendBack')">↓ Send Backward</button>
+  <div class="ctx-sep"></div>
+  <button onclick="ContextMenu.action('group')">⊞ Group</button>
+  <button onclick="ContextMenu.action('lock')">🔒 Lock</button>
+  <div class="ctx-sep"></div>
+  <button class="danger" onclick="ContextMenu.action('delete')">✕ Delete</button>
+</div>
+
+<!-- Notification Toast -->
+<div class="toast-stack" id="toast-stack"></div>
+
+<!-- Scripts -->
+<script src="js/theme.js"></script>
+<script src="js/history.js"></script>
+<script src="js/state.js"></script>
+<script src="js/blockDefs.js"></script>
+<script src="js/canvas.js"></script>
+<script src="js/blocks.js"></script>
+<script src="js/properties.js"></script>
+<script src="js/nodes.js"></script>
+<script src="js/panels.js"></script>
+<script src="js/pages.js"></script>
+<script src="js/importer.js"></script>
+<script src="js/exporter.js"></script>
+<script src="js/preview.js"></script>
+<script src="js/contextmenu.js"></script>
+<script src="js/minimap.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>

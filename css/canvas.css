@@ -1,0 +1,135 @@
+/* ══════════════════════════════════════════
+   WEBCRAFT — CANVAS
+══════════════════════════════════════════ */
+
+.canvas-wrap {
+  flex: 1;
+  position: relative;
+  overflow: hidden;
+  background: var(--bg-canvas);
+  transition: background var(--transition-slow);
+}
+
+/* Rulers */
+.canvas-ruler-x {
+  position: absolute;
+  top: 0; left: 20px; right: 0;
+  height: 20px;
+  background: var(--bg-panel);
+  border-bottom: 1px solid var(--border);
+  z-index: 20;
+  overflow: hidden;
+}
+.canvas-ruler-y {
+  position: absolute;
+  top: 20px; left: 0; bottom: 20px;
+  width: 20px;
+  background: var(--bg-panel);
+  border-right: 1px solid var(--border);
+  z-index: 20;
+}
+
+/* Viewport */
+.canvas-viewport {
+  position: absolute;
+  top: 20px; left: 20px; right: 0; bottom: 0;
+  overflow: hidden;
+  cursor: default;
+}
+.canvas-viewport.pan-mode { cursor: grab; }
+.canvas-viewport.pan-mode.panning { cursor: grabbing; }
+.canvas-viewport.connect-mode { cursor: crosshair; }
+
+/* Grid SVG */
+.canvas-grid {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* Connections SVG */
+.connections-layer {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 5;
+  overflow: visible;
+}
+
+/* Stage (transformed by pan/zoom) */
+.canvas-stage {
+  position: absolute;
+  top: 0; left: 0;
+  width: 0; height: 0;
+  transform-origin: 0 0;
+  z-index: 10;
+}
+
+/* Selection rectangle */
+.selection-rect {
+  position: absolute;
+  border: 1.5px solid var(--accent);
+  background: rgba(108,99,255,0.08);
+  border-radius: 3px;
+  pointer-events: none;
+  display: none;
+  z-index: 50;
+}
+
+/* ── MINI MAP ── */
+.minimap {
+  position: absolute;
+  bottom: 12px;
+  right: 12px;
+  width: 180px;
+  height: 120px;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  z-index: 40;
+  box-shadow: var(--shadow-md);
+  opacity: 0.8;
+  transition: opacity var(--transition);
+}
+.minimap:hover { opacity: 1; }
+#minimap-canvas { width: 100%; height: 100%; display: block; }
+.minimap-viewport {
+  position: absolute;
+  top: 0; left: 0;
+  border: 1.5px solid var(--accent);
+  background: rgba(108,99,255,0.1);
+  border-radius: 2px;
+  pointer-events: none;
+}
+
+/* ── CANVAS QUICK BUTTONS ── */
+.canvas-quick {
+  position: absolute;
+  bottom: 12px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 4px;
+  box-shadow: var(--shadow-md);
+  z-index: 40;
+}
+.canvas-quick button {
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-sm);
+  font-size: 13px;
+  color: var(--text-secondary);
+  transition: all var(--transition);
+}
+.canvas-quick button:hover { background: var(--bg-hover); color: var(--text-primary); }

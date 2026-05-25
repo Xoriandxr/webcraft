@@ -1,0 +1,82 @@
+/* ══════════════════════════════════════════
+   WEBCRAFT — ANIMATIONS
+══════════════════════════════════════════ */
+
+/* Block add animation */
+@keyframes blockAppear {
+  from {
+    opacity: 0;
+    transform: scale(0.85) translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+.wc-block.appearing {
+  animation: blockAppear 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Block delete animation */
+@keyframes blockVanish {
+  from { opacity: 1; transform: scale(1); }
+  to { opacity: 0; transform: scale(0.8); }
+}
+.wc-block.vanishing {
+  animation: blockVanish 0.2s ease forwards;
+  pointer-events: none;
+}
+
+/* Selection pulse */
+@keyframes selectPulse {
+  0%, 100% { box-shadow: var(--shadow-block-selected); }
+  50% { box-shadow: 0 0 0 4px rgba(108,99,255,0.3), 0 4px 24px rgba(108,99,255,0.2); }
+}
+
+/* Canvas grid animate on zoom */
+.canvas-grid { transition: opacity 0.2s ease; }
+
+/* Connection line draw */
+@keyframes connDraw {
+  from { stroke-dashoffset: 1000; }
+  to { stroke-dashoffset: 0; }
+}
+.connection-path {
+  stroke-dasharray: 1000;
+  stroke-dashoffset: 0;
+  animation: connDraw 0.4s ease;
+}
+
+/* Spinner */
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+.spinner {
+  width: 20px;
+  height: 20px;
+  border: 2px solid var(--border);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: spin 0.6s linear infinite;
+}
+
+/* Panel slide in */
+@keyframes panelSlide {
+  from { opacity: 0; transform: translateX(-8px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+.tab-content.active { animation: panelSlide 0.2s ease; }
+
+/* Prop row hover highlight */
+.prop-row:hover .prop-label { color: var(--text-secondary); }
+
+/* Shimmer for loading states */
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+.shimmer {
+  background: linear-gradient(90deg, var(--bg-elevated) 25%, var(--bg-hover) 50%, var(--bg-elevated) 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+}
