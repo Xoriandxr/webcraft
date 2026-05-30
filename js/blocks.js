@@ -36,8 +36,17 @@ const Blocks = {
   // ── RENDER ALL ──
   renderAll() {
     const stage = document.getElementById('canvas-stage');
-    stage.innerHTML = '';
+    const existingIds = new Set(State.blocks.map(b => b.id));
+
+    // Remove blocks that no longer exist
+    [...stage.children].forEach(el => {
+      if (el.classList.contains('wc-block') && !existingIds.has(el.id)) {
+        el.remove();
+      }
+    });
+
     State.blocks.forEach(b => this.renderBlock(b));
+    Nodes.updateConnections();
     this.updateStatusBar();
   },
 
@@ -50,37 +59,40 @@ const Blocks = {
     if (isNew) {
       el = document.createElement('div');
       el.id = block.id;
+      // Events
+      el.addEventListener('mousedown', (e) => this._blockMouseDown(e, block.id));
+      el.addEventListener('dblclick', (e) => this._blockDblClick(e, block.id));
+      el.addEventListener('contextmenu', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        this.select(block.id);
+        ContextMenu.show(e);
+      });
     }
 
     const def = BlockDefs[block.type];
     const label = def ? def.label : block.type;
+    const isSelected = State.selectedIds.includes(block.id);
 
-    el.className = `wc-block block-type-${block.type}${block.locked ? ' locked' : ''}${block.hidden ? ' hidden' : ''}${State.selectedIds.includes(block.id) ? ' selected' : ''}`;
-    el.style.cssText = `
-      left: ${block.x}px;
-      top: ${block.y}px;
-      width: ${block.w}px;
-      height: ${block.h}px;
-      z-index: ${block.zIndex};
-      opacity: ${block.hidden ? 0 : (block.opacity || 100) / 100};
-    `;
+    el.className = `wc-block block-type-${block.type}${block.locked ? ' locked' : ''}${block.hidden ? ' hidden' : ''}${isSelected ? ' selected' : ''}`;
+    el.style.left = block.x + 'px';
+    el.style.top = block.y + 'px';
+    el.style.width = block.w + 'px';
+    el.style.height = block.h + 'px';
+    el.style.zIndex = block.zIndex;
+    el.style.opacity = block.hidden ? 0 : (block.opacity || 100) / 100;
 
-    el.innerHTML = `
-      <div class="block-label">${label}</div>
-      ${def ? def.render(block) : `<div class="block-content">${block.type}</div>`}
-      ${State.selectedIds.includes(block.id) ? this._resizeHandles() : ''}
-      ${State.selectedIds.includes(block.id) ? this._nodePorts() : ''}
-    `;
-
-    // Events
-    el.addEventListener('mousedown', (e) => this._blockMouseDown(e, block.id));
-    el.addEventListener('dblclick', (e) => this._blockDblClick(e, block.id));
-    el.addEventListener('contextmenu', (e) => {
-      e.preventDefault();
-      e.stopPropagation();
-      this.select(block.id);
-      ContextMenu.show(e);
-    });
+    // Only update innerHTML if necessary
+    const contentKey = JSON.stringify(block.props) + isSelected + block.type;
+    if (el.dataset.contentKey !== contentKey) {
+      el.innerHTML = `
+        <div class="block-label">${label}</div>
+        ${def ? def.render(block) : `<div class="block-content">${block.type}</div>`}
+        ${isSelected ? this._resizeHandles() : ''}
+        ${isSelected ? this._nodePorts() : ''}
+      `;
+      el.dataset.contentKey = contentKey;
+    }
 
     if (isNew) {
       stage.appendChild(el);
