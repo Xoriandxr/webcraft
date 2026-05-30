@@ -30,10 +30,8 @@ const Nodes = {
 
     const onMove = (ev) => {
       if (!this._drawing) return;
-      const vp = document.getElementById('canvas-viewport').getBoundingClientRect();
-      const ex = ev.clientX - vp.left;
-      const ey = ev.clientY - vp.top;
-      const d = this._bezierPath(startPos.x, startPos.y, ex, ey);
+      const pos = Canvas.screenToCanvas(ev.clientX, ev.clientY);
+      const d = this._bezierPath(startPos.x, startPos.y, pos.x, pos.y);
       line.setAttribute('d', d);
     };
 
@@ -44,9 +42,7 @@ const Nodes = {
       this._drawing = false;
 
       // Find target block under mouse
-      const vp = document.getElementById('canvas-viewport').getBoundingClientRect();
-      const cx = (ev.clientX - vp.left - State.panX) / State.zoom;
-      const cy = (ev.clientY - vp.top - State.panY) / State.zoom;
+      const { x: cx, y: cy } = Canvas.screenToCanvas(ev.clientX, ev.clientY);
       const target = State.blocks.find(b =>
         b.id !== this._fromId &&
         cx >= b.x && cx <= b.x + b.w &&
@@ -116,6 +112,7 @@ const Nodes = {
     path.setAttribute('d', this._bezierPath(from.x, from.y, to.x, to.y));
     path.setAttribute('stroke', conn.color || 'var(--connection)');
     path.setAttribute('stroke-width', '2');
+    path.setAttribute('vector-effect', 'non-scaling-stroke');
     path.setAttribute('fill', 'none');
     path.setAttribute('opacity', '0.7');
     path.setAttribute('data-id', conn.id);
@@ -136,6 +133,7 @@ const Nodes = {
     arrow.setAttribute('cx', to.x);
     arrow.setAttribute('cy', to.y);
     arrow.setAttribute('r', '4');
+    arrow.setAttribute('vector-effect', 'non-scaling-stroke');
     arrow.setAttribute('fill', conn.color || 'var(--connection)');
     arrow.setAttribute('opacity', '0.8');
     svg.appendChild(arrow);
@@ -144,11 +142,10 @@ const Nodes = {
   _getPortPosition(blockId, port) {
     const block = State.getBlock(blockId);
     if (!block) return null;
-    const vp = document.getElementById('canvas-viewport').getBoundingClientRect();
-    const bx = block.x * State.zoom + State.panX;
-    const by = block.y * State.zoom + State.panY;
-    const bw = block.w * State.zoom;
-    const bh = block.h * State.zoom;
+    const bx = block.x;
+    const by = block.y;
+    const bw = block.w;
+    const bh = block.h;
 
     switch (port) {
       case 'output': return { x: bx + bw, y: by + bh / 2 };

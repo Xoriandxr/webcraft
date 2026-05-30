@@ -40,11 +40,14 @@ const Canvas = {
 
   // ── TRANSFORM ──
   applyTransform() {
-    this.stage.style.transform = `translate(${State.panX}px, ${State.panY}px) scale(${State.zoom})`;
-    this.zoomLabel.textContent = Math.round(State.zoom * 100) + '%';
-    this._updateGrid();
-    Nodes.updateConnections();
-    Minimap.update();
+    if (this._raf) return;
+    this._raf = requestAnimationFrame(() => {
+      this.stage.style.transform = `translate(${State.panX}px, ${State.panY}px) scale(${State.zoom})`;
+      this.zoomLabel.textContent = Math.round(State.zoom * 100) + '%';
+      this._updateGrid();
+      Minimap.update();
+      this._raf = null;
+    });
   },
 
   _updateGrid() {
@@ -54,20 +57,30 @@ const Canvas = {
     const oy = State.panY % sz;
     const oxB = State.panX % szB;
     const oyB = State.panY % szB;
-    const grid = document.getElementById('canvas-grid');
-    if (!grid) return;
-    grid.innerHTML = `
-      <defs>
-        <pattern id="smallGrid" width="${sz}" height="${sz}" x="${ox}" y="${oy}" patternUnits="userSpaceOnUse">
-          <path d="M ${sz} 0 L 0 0 0 ${sz}" fill="none" stroke="var(--grid-line)" stroke-width="0.5"/>
-        </pattern>
-        <pattern id="grid" width="${szB}" height="${szB}" x="${oxB}" y="${oyB}" patternUnits="userSpaceOnUse">
-          <rect width="${szB}" height="${szB}" fill="url(#smallGrid)"/>
-          <path d="M ${szB} 0 L 0 0 0 ${szB}" fill="none" stroke="var(--grid-line-major)" stroke-width="1"/>
-        </pattern>
-      </defs>
-      <rect width="100%" height="100%" fill="url(#grid)"/>
-    `;
+
+    if (!this._smallGrid) {
+      this._smallGrid = document.getElementById('smallGrid');
+      this._smallGridPath = this._smallGrid?.querySelector('path');
+      this._gridPattern = document.getElementById('grid');
+      this._gridRect = this._gridPattern?.querySelector('rect');
+      this._gridPath = this._gridPattern?.querySelector('path');
+    }
+
+    if (!this._smallGrid) return;
+
+    this._smallGrid.setAttribute('width', sz);
+    this._smallGrid.setAttribute('height', sz);
+    this._smallGrid.setAttribute('x', ox);
+    this._smallGrid.setAttribute('y', oy);
+    this._smallGridPath?.setAttribute('d', `M ${sz} 0 L 0 0 0 ${sz}`);
+
+    this._gridPattern.setAttribute('width', szB);
+    this._gridPattern.setAttribute('height', szB);
+    this._gridPattern.setAttribute('x', oxB);
+    this._gridPattern.setAttribute('y', oyB);
+    this._gridRect?.setAttribute('width', szB);
+    this._gridRect?.setAttribute('height', szB);
+    this._gridPath?.setAttribute('d', `M ${szB} 0 L 0 0 0 ${szB}`);
   },
 
   // ── ZOOM ──
@@ -103,7 +116,7 @@ const Canvas = {
     const pad = 80;
     const scaleX = (vp.width - pad * 2) / (maxX - minX || 1);
     const scaleY = (vp.height - pad * 2) / (maxY - minY || 1);
-    State.zoom = Math.min(scaleX, scaleY, 2);
+    State.zoom = Math.max(0.1, Math.min(scaleX, scaleY, 2));
     State.panX = (vp.width - (maxX - minX) * State.zoom) / 2 - minX * State.zoom;
     State.panY = (vp.height - (maxY - minY) * State.zoom) / 2 - minY * State.zoom;
     this.applyTransform();

@@ -15,6 +15,14 @@ const Minimap = {
 
   update() {
     if (!this._canvas || !this._ctx) return;
+    if (this._raf) return;
+    this._raf = requestAnimationFrame(() => {
+      this._doUpdate();
+      this._raf = null;
+    });
+  },
+
+  _doUpdate() {
     const ctx = this._ctx;
     const w = this._canvas.width;
     const h = this._canvas.height;
